@@ -52,7 +52,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}.foo
   <p id="empty" class="empty" hidden></p>
   <noscript><p class="empty">Activa JavaScript para consultar los filtros o visita la sala de prensa oficial.</p></noscript>
 </main>
-<footer><div class="wrap foot"><span>Sitio independiente. Fuente de titulares y fechas: Empresa Metro de Bogotá.</span><a href="https://www.metrodebogota.gov.co/noticias">Ver publicación original en el portal oficial</a></div></footer>
+<footer><div class="wrap foot"><span>Sitio independiente. Fuentes: Empresa Metro de Bogotá y Portal Bogotá.</span><a href="https://www.metrodebogota.gov.co/noticias">Sala de prensa de la Empresa Metro</a></div></footer>
 <script id="snapshot" type="application/json">null</script>
 <script>
 'use strict';
@@ -97,17 +97,19 @@ function render() {
     (selected === 'todas' || item.tags.includes(selected)) &&
     normalize([item.title, ...item.tags.map(tag => labels[tag])].join(' ')).includes(query)
   );
-  byId('results').textContent = snapshot ? `${matches.length} de ${items.length} noticias seleccionadas · ${snapshot.scanned} noticias revisadas` : '';
+  byId('results').textContent = snapshot ? `${matches.length} de ${items.length} noticias seleccionadas · ${snapshot.liveMatches} coincidencias en ${snapshot.scanned} noticias revisadas · ${snapshot.activeSource}` : '';
   list.replaceChildren(...matches.map(item => {
     const card = node('li', '', 'story');
-    const time = node('time', date.format(new Date(item.publishedAt)), 'date');
+    const time = node('time', date.format(new Date(item.publishedAt)) + ' · ' + item.publisher, 'date');
     time.dateTime = item.publishedAt;
     const heading = node('h3');
     const link = node('a', item.title);
     const url = new URL(item.url);
-    if (url.origin === 'https://www.metrodebogota.gov.co' && url.pathname.startsWith('/noticias/')) link.href = url.href;
+    if ((url.origin === 'https://www.metrodebogota.gov.co' && url.pathname.startsWith('/noticias/')) ||
+        (url.origin === 'https://bogota.gov.co' && url.pathname.startsWith('/mi-ciudad/movilidad/'))) link.href = url.href;
     heading.append(link);
     const badges = node('div', '', 'badges');
+    if (item.archived) badges.append(node('span', 'Archivo', 'badge'));
     badges.append(...item.tags.map(tag => node('span', labels[tag], 'badge')));
     card.append(time, heading, badges);
     return card;
